@@ -12,21 +12,22 @@ public class SimpleShell {
         // yep, make an effort to format things nicely, eh?
         System.out.println(output);
     }
+
     public static void main(String[] args) throws java.io.IOException {
 
         YouAreEll webber = new YouAreEll();
-        String commandLine;
-        BufferedReader console = new BufferedReader
-                (new InputStreamReader(System.in));
+        //String commandLine;// can remove this. all this is doing is telling the compiler to make space for a string. Do this only if chance it will never be used.
+        BufferedReader console = new BufferedReader(new InputStreamReader(System.in)); //even though InputStreamReader is not a reader I can use it here because it extends reader and inherits its properties
 
-        ProcessBuilder pb = new ProcessBuilder();
-        List<String> history = new ArrayList<String>();
+        ProcessBuilder pb = new ProcessBuilder();//"this is used to create an operating system process", its a way to interact with the underlying operating system
+        List<String> history = new ArrayList<String>(); //List is interface, ArrayList implements List interface,
+
         int index = 0;
-        //we break out with <ctrl c>
+        //we break out with <ctrl c>  when this is running only to stop it is press control c, there's no interupt so have to kill manually in terminal
         while (true) {
             //read what the user enters
             System.out.println("cmd? ");
-            commandLine = console.readLine();
+            String commandLine = console.readLine();
 
             //input parsed into array of strings(command and arguments)
             String[] commands = commandLine.split(" ");
@@ -46,7 +47,7 @@ public class SimpleShell {
                 list.add(commands[i]);
 
             }
-            System.out.print(list); //***check to see if list was added correctly***
+            System.out.println(list); //***check to see if list was added correctly***
             history.addAll(list);
             try {
                 //display history of shell with index
@@ -56,28 +57,46 @@ public class SimpleShell {
                     continue;
                 }
 
-                // Specific Commands.
+                //region SPECIFIC COMMANDS
+
+                String results;
 
                 // ids
                 if (list.contains("ids")) {
-                    String results = webber.get_ids();
-                    SimpleShell.prettyPrint(results);
+                    switch (list.size()) {
+                        case 1:
+                            results = webber.get_ids();
+                            SimpleShell.prettyPrint(results);
+                            break;
+                        case 3:
+                            // get 2nd and third item from list
+                            // create json object with "name" set to the 2nd item and "github" set to the 3rd item
+                            System.out.println("delete me");
+                            results = webber.post_id("{\"userid\":\"-\",\"name\":\"kat\",\"github\":\"KATRINAHIGH\"}");
+                            SimpleShell.prettyPrint(results);
+                            break;
+                        case 4:
+                            //handle PUT here
+                        default:
+                            throw new IOException();
+                    }
                     continue;
+
                 }
 
                 // messages
                 if (list.contains("messages")) {
-                    String results = webber.get_messages();
+                    results = webber.get_messages();
                     SimpleShell.prettyPrint(results);
                     continue;
                 }
                 // you need to add a bunch more.
 
-                //!! command returns the last command in history
+                //!! command returns the last command in history, this is the command before last
                 if (list.get(list.size() - 1).equals("!!")) {
                     pb.command(history.get(history.size() - 2));
 
-                }//!<integer value i> command
+                }//!<integer value i> command  ...this is the last command, exclimation marks are terminal shortcuts, we are emulating them
                 else if (list.get(list.size() - 1).charAt(0) == '!') {
                     int b = Character.getNumericValue(list.get(list.size() - 1).charAt(1));
                     if (b <= history.size())//check if integer entered isn't bigger than history size
@@ -86,8 +105,8 @@ public class SimpleShell {
                     pb.command(list);
                 }
 
-                // wait, wait, what curiousness is this?
-                Process process = pb.start();
+                // wait, wait, what curiousness is this? It's doing nested curios bullshit with lists and arrays
+                Process process = pb.start(); //expecting a list that can't be empty or have null strings
 
                 //obtain the input stream
                 InputStream is = process.getInputStream();
@@ -96,11 +115,11 @@ public class SimpleShell {
 
                 //read output of the process
                 String line;
-                while ((line = br.readLine()) != null)
+                while ((line = br.readLine()) != null) {
                     System.out.println(line);
+                }
                 br.close();
-
-
+                //endregion
             }
 
             //catch ioexception, output appropriate message, resume waiting for input
